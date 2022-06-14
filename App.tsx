@@ -3,11 +3,16 @@
  */
 
 import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
 
-import GetStart from './src/screens/GetStart/GetStart';
+import Navigation from './src/screens/routes';
 
 const App = () => {
-  return <GetStart />;
+  return (
+    <NavigationContainer>
+      <Navigation />
+    </NavigationContainer>
+  );
 };
 
 export default App;
