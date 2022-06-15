@@ -21,6 +21,7 @@ interface IHomeStyle {
   nextForecastsContentDay: TextStyle;
   nextForecastsContentNumberMax: TextStyle;
   nextForecastsContentNumberMin: TextStyle;
+  viewButton: ViewStyle;
 }
 
 export default (): IHomeStyle => {
@@ -117,6 +118,10 @@ export default (): IHomeStyle => {
       fontSize: 12,
       color: '#fff',
       fontWeight: '600',
+    },
+    viewButton: {
+      alignItems: 'center',
+      marginTop: 32,
     },
   });
 };

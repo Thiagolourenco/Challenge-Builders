@@ -2,10 +2,12 @@
  * @format
  */
 
-import React from 'react';
-import {View, Text, Pressable} from 'react-native';
+import React, {useEffect} from 'react';
+import {View, Text, PermissionsAndroid} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+
+import {Button} from '../../components';
 
 import {NavigationProps} from '../../@types';
 
@@ -18,6 +20,18 @@ const GetStart = (): JSX.Element => {
 
   const {navigate} = useNavigation<NavigationGetStartProps>();
 
+  useEffect(() => {
+    handleLocation();
+  }, []);
+
+  const handleLocation = async () => {
+    try {
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+    } catch (error) {}
+  };
+
   const handleHome = () => navigate('Home');
 
   return (
@@ -26,9 +40,7 @@ const GetStart = (): JSX.Element => {
         Previsão{'\n'} <Text style={styles.subTitle}>Climática</Text>
       </Text>
 
-      <Pressable style={styles.button} onPress={handleHome}>
-        <Text style={styles.buttonText}>Ver Previsão</Text>
-      </Pressable>
+      <Button text="Ver Previsão" onPress={handleHome} />
     </View>
   );
 };

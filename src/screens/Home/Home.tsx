@@ -3,55 +3,68 @@
  */
 
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList} from 'react-native';
-import axios from 'axios';
+import {View, Text, FlatList, ListRenderItem} from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+import {APP_ID} from '@env';
+
+import {Daily, DataForecasts} from '../../@types';
+import {Indicator, Button} from '../../components';
+import {api} from '../../services';
 
 import useStyles from './Home.style';
 
 const Home = (): JSX.Element => {
-  const [dataForecasts, setDataForecasts] = useState();
+  const [dataForecasts, setDataForecasts] = useState<DataForecasts>();
   const [days, setDays] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [location, setTocation] = useState({lat: 0, long: 0});
 
   const styles = useStyles();
 
-  const data = [0, 1, 2, 3, 4, 5, 6];
-
   useEffect(() => {
+    loadLocation();
     LoadForecasts();
     LoadForecastsDayts();
   }, []);
 
+  const loadLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        setTocation({
+          lat: position.coords.latitude,
+          long: position.coords.longitude,
+        });
+      },
+      () => {},
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
+
   const LoadForecasts = async () => {
     try {
-      // Pegar data atual, atráves do Timezone
-
-      const response = await axios.get(
-        'https://api.openweathermap.org/data/2.5/weather?lat=-3.9014&lon=-38.3911&units=metric&lang=pt_br&appid=7aab7fb1cf46d47793aaefc9cbab1f90',
+      setLoading(true);
+      const response = await api.get(
+        `/weather?lat=${location.lat}&lon=${location.long}&units=metric&lang=pt_br&appid=${APP_ID}`,
       );
 
       setDataForecasts(response.data);
+      setLoading(false);
     } catch (error) {
-      console.log('ERRO => ', error);
+      setLoading(false);
     }
   };
-
-  // Melhorar
 
   const LoadForecastsDayts = async () => {
     try {
-      const response = await axios.get(
-        'https://api.openweathermap.org/data/2.5/onecall?lat=-3.9014&lon=-38.3911&units=metric&lang=pt_br&exclude=hourly,minutely&appid=7aab7fb1cf46d47793aaefc9cbab1f90',
+      const response = await api.get(
+        `/onecall?lat=${location.lat}&lon=${location.long}&units=metric&lang=pt_br&exclude=hourly,minutely&appid=${APP_ID}`,
       );
 
       setDays(response.data.daily);
-
-      console.log('RESPONSE => ', response.data);
-    } catch (error) {
-      console.log('ERROR => ', error);
-    }
+    } catch (error) {}
   };
 
-  const NewForecasts = ({item}) => {
+  const NewForecasts: ListRenderItem<Daily> = ({item}) => {
     const newData = new Date(item.dt * 1000);
     const daysArray = ['Dom', 'Seg', 'Ter', 'Qua', 'Quin', 'Sex', 'Sab'];
     const newDay = daysArray[newData.getDay()];
@@ -72,45 +85,53 @@ const Home = (): JSX.Element => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentInfo}>
-        <Text style={styles.textLocation}>{dataForecasts?.name}</Text>
+      {loading ? (
+        <Indicator />
+      ) : (
+        <>
+          <View style={styles.contentInfo}>
+            <Text style={styles.textLocation}>{dataForecasts?.name}</Text>
 
-        <Text style={styles.textTemperature}>{dataForecasts?.main.temp}</Text>
-        <Text style={styles.textStatus}>
-          {dataForecasts?.weather[0].description}
-        </Text>
-      </View>
+            <Text style={styles.textTemperature}>
+              {dataForecasts?.main.temp}
+            </Text>
+            <Text style={styles.textStatus}>
+              {dataForecasts?.weather[0].description}
+            </Text>
+          </View>
 
-      <View style={styles.weatherInformation}>
-        <View style={styles.weatherInformationContent}>
-          <Text style={styles.weatherInformationContentTextPerc}>30%</Text>
-          <Text style={styles.weatherInformationContentText}>Precipitação</Text>
-        </View>
-        <View style={styles.weatherInformationContent}>
-          <Text style={styles.weatherInformationContentTextPerc}>
-            {dataForecasts?.main?.humidity}%
-          </Text>
-          <Text style={styles.weatherInformationContentText}>Humidade</Text>
-        </View>
-        <View style={styles.weatherInformationContent}>
-          <Text style={styles.weatherInformationContentTextPerc}>
-            {dataForecasts?.wind.speed}%
-          </Text>
-          <Text style={styles.weatherInformationContentText}>
-            Velocidade do Vento
-          </Text>
-        </View>
-      </View>
+          <View style={styles.weatherInformation}>
+            <View style={styles.weatherInformationContent}>
+              <Text style={styles.weatherInformationContentTextPerc}>
+                {dataForecasts?.main?.humidity}%
+              </Text>
+              <Text style={styles.weatherInformationContentText}>Humidade</Text>
+            </View>
+            <View style={styles.weatherInformationContent}>
+              <Text style={styles.weatherInformationContentTextPerc}>
+                {dataForecasts?.wind.speed}%
+              </Text>
+              <Text style={styles.weatherInformationContentText}>
+                Velocidade do Vento
+              </Text>
+            </View>
+          </View>
 
-      <View style={styles.nextForecasts}>
-        <Text style={styles.nextForecastsText}>Previsão de 7 dias</Text>
-        <FlatList
-          data={days}
-          renderItem={NewForecasts}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+          <View style={styles.nextForecasts}>
+            <Text style={styles.nextForecastsText}>Próximos Dias</Text>
+            <FlatList
+              data={days}
+              renderItem={NewForecasts}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+
+          <View style={styles.viewButton}>
+            <Button text="Atualizar" onPress={LoadForecasts} />
+          </View>
+        </>
+      )}
     </View>
   );
 };
