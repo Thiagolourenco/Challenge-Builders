@@ -28,6 +28,7 @@ export default (): IHomeStyle => {
     container: {
       flex: 1,
       backgroundColor: '#8C9CDE',
+      paddingTop: 40,
     },
     contentInfo: {
       justifyContent: 'center',
@@ -35,7 +36,7 @@ export default (): IHomeStyle => {
       marginTop: 32,
     },
     textLocation: {
-      fontSize: 14,
+      fontSize: 20,
       color: '#fff',
       fontWeight: 'bold',
       marginBottom: 4,
